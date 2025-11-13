@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Clinic Day Planner — Tailwind UI</title>
+
+	<!-- Tailwind CDN -->
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link rel="stylesheet" href="/planner.css">
+
+</head>
+
+<body class="text-slate-800">
+
+	<!-- Topbar -->
+	<header class="no-print sticky top-0 z-40 bg-white border-b border-slate-200">
+		<div class="mx-auto px-4 sm:px-6 lg:px-8 py-4">
+			<div class="flex items-center justify-between h-16">
+				<div class="flex items-center gap-4">
+					<figure class="w-full h-16">
+						<img src="/assets/images/logo_bio.webp" class="w-full h-full object-contain" />
+					</figure>
+
+					<div class="flex items-center space-x-2">
+						<button id="prev-day" aria-label="Previous day"
+							class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50">
+							←
+						</button>
+
+						<input id="date-picker" type="date"
+							class="px-3 py-2 border rounded-lg border-slate-200 focus:outline-none" />
+
+						<button id="next-day" aria-label="Next day"
+							class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50">
+							→
+						</button>
+
+						<span id="ahead-info" class="text-sm text-slate-500">(7-day horizon)</span>
+					</div>
+				</div>
+
+				<div class="flex items-center gap-2">
+					<button id="add-patient" class="px-3 py-2 rounded-lg bg-[#52a27e] text-white border">+
+						Patient</button>
+					<button id="add-staff" class="px-3 py-2 rounded-lg bg-[#52a27e] text-white border">+
+						Staff</button>
+					<button id="new-event" class="px-3 py-2 rounded-lg bg-[#079ec4] text-white">+ New
+						Event</button>
+					<button id="print-day" class="px-3 py-2 rounded-lg bg-[#079ec4] text-white border">Print
+						Day</button>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<!-- Main grid -->
+	<main class=" px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-[320px_1fr] gap-6">
+		<!-- Sidebar -->
+		<aside class="no-print bg-white border rounded-lg p-4 shadow-sm">
+			<section class="mb-4">
+				<h2 class="text-sm font-semibold text-slate-700 flex items-center justify-between">
+					<span>Patients</span>
+					<span id="patient-count" class="text-xs text-slate-500"></span>
+				</h2>
+				<ol id="patient-list" class="mt-3 space-y-2"></ol>
+				<p class="mt-2 text-xs text-slate-400">Max 15 patients per day.</p>
+			</section>
+
+			<section class="mb-4">
+				<h2 class="text-sm font-semibold text-slate-700">Professionals</h2>
+				<ul id="staff-list" class="mt-3 space-y-2"></ul>
+				<p class="mt-2 text-xs text-slate-400">Drag a professional onto an event to assign.</p>
+			</section>
+
+			<section class="mb-4">
+				<h2 class="text-sm font-semibold text-slate-700">Legend</h2>
+				<div class="mt-2 flex gap-2 items-center text-sm text-slate-600">
+					<span class="w-3 h-3 rounded-sm" style="background:#4e79a7"></span> General
+					<span class="w-3 h-3 rounded-sm ml-3" style="background:#59a14f"></span> Check-up
+					<span class="w-3 h-3 rounded-sm ml-3" style="background:#e15759"></span> Procedure
+				</div>
+			</section>
+
+			<section>
+				<h2 class="text-sm font-semibold text-slate-700 flex items-center justify-between">
+					<span>Events</span>
+					<span id="event-count" class="text-xs text-slate-500"></span>
+				</h2>
+				<ul id="event-list" class="mt-3 space-y-2"></ul>
+			</section>
+		</aside>
+
+		<!-- Planner -->
+		<section class="planner-wrap">
+			<div id="planner-header" class="planner-header bg-white border rounded-t-lg"></div>
+			<div id="planner" class="planner border rounded-b-lg bg-white mt-0 overflow-auto"></div>
+		</section>
+	</main>
+
+	<!-- Tailwind Modals -->
+
+	<!-- Patient Modal -->
+	<div id="patientModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40">
+		<div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 mx-4">
+			<h3 class="text-lg font-semibold mb-4">Add Patient</h3>
+			<form id="patientForm" class="space-y-4">
+				<div>
+					<label class="block text-sm text-slate-700">Patient name</label>
+					<input id="patientName" class="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2"
+						required />
+				</div>
+				<div class="flex justify-end gap-3">
+					<button type="button" onclick="closeModal('patientModal')"
+						class="px-4 py-2 rounded-lg border">Cancel</button>
+					<button type="submit" class="px-4 py-2 rounded-lg bg-sky-600 text-white">Add patient</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<!-- Staff Modal -->
+	<div id="staffModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40">
+		<div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 mx-4">
+			<h3 class="text-lg font-semibold mb-4">Add Professional</h3>
+			<form id="staffForm" class="space-y-4">
+				<div>
+					<label class="block text-sm text-slate-700">Name</label>
+					<input id="staffName" class="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2"
+						required />
+				</div>
+				<div class="flex items-center gap-3">
+					<label class="block text-sm text-slate-700">Color</label>
+					<input id="staffColor" type="color" value="#8b5cf6" class="w-12 h-10 p-0 border-0" />
+				</div>
+				<div class="flex justify-end gap-3 mt-2">
+					<button type="button" onclick="closeModal('staffModal')"
+						class="px-4 py-2 rounded-lg border">Cancel</button>
+					<button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 text-white">Add staff</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<!-- Event Modal -->
+	<div id="eventModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40">
+		<div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 mx-4">
+			<h3 class="text-lg font-semibold mb-4">Add Event Template</h3>
+			<form id="eventForm" class="space-y-4">
+				<div>
+					<label class="block text-sm text-slate-700">Title</label>
+					<input id="eventTitle" placeholder="Consultation"
+						class="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2" required />
+				</div>
+				<div>
+					<label class="block text-sm text-slate-700">Description</label>
+					<textarea id="eventDescription"
+						class="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2"
+						placeholder="Add a description">
+
+					</textarea>
+				</div>
+				<div class="flex items-center gap-3">
+					<label class="block text-sm text-slate-700">Color</label>
+					<input id="eventColor" type="color" value="#4e79a7" class="w-12 h-10 p-0 border-0" />
+				</div>
+				<div>
+					<label class="block text-sm text-slate-700">Default duration (minutes)</label>
+					<input id="eventDuration" type="number" min="15" step="15" value="30"
+						class="mt-1 block w-36 rounded-lg border border-slate-200 px-3 py-2" />
+				</div>
+				<div class="flex justify-end gap-3">
+					<button type="button" onclick="closeModal('eventModal')"
+						class="px-4 py-2 rounded-lg border">Cancel</button>
+					<button type="submit" class="px-4 py-2 rounded-lg bg-green-600 text-white">Add event</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<!-- Edit Event Modal -->
+	<div id="editEventModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+		<div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 mx-4">
+			<h2 class="text-lg font-bold mb-2">Edit Event</h2>
+			<form id="editEventForm">
+				<label class="block mb-1">Title</label>
+				<input id="editEventTitle" type="text" class="w-full border rounded p-1 mb-2" required />
+
+				<label class="block mb-1">Description</label>
+				<textarea id="editEventDescription" class="w-full border rounded p-1 mb-2"></textarea>
+
+				<label class="block mb-1">Start Time</label>
+				<input id="editEventStart" type="time" class="w-full border rounded p-1 mb-2" required />
+
+				<label class="block mb-1">Duration (minutes)</label>
+				<input id="editEventDuration" type="number" min="15" class="w-full border rounded p-1 mb-2" required />
+
+				<label class="block mb-1">Color</label>
+				<input id="editEventColor" type="color" class="w-full border rounded p-1 mb-2" />
+
+				<div class="flex justify-end gap-2 mt-2">
+					<button type="button" id="editEventCancel" class="px-3 py-1 bg-gray-200 rounded">Cancel</button>
+					<button type="submit" class="px-3 py-1 bg-blue-500 text-white rounded">Save</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<!-- Config & planner.js include -->
+	<script>
+		window.PLANNER_CONFIG = {
+			startHour: 8,
+			endHour: 18,
+			slotMinutes: 30,
+			maxPatients: 15,
+			horizonDays: 7,
+			defaultDuration: 30,
+			backendUrl: null
+		};
+	</script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+	<!-- your planner logic — keep your planner.js file; it will run after this UI -->
+	<script src="planner.js"></script>
+
+	<script src="/pdf.jsF"></script>
+
+</body>
+
+</html>
