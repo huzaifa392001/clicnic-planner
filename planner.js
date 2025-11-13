@@ -30,10 +30,20 @@
 
 	function saveLS(key, value) {
 		localStorage.setItem(key, JSON.stringify(value));
+	} 
+	
+	function ymd(date) {
+		const day = String(date.getUTCDate()).padStart(2, '0');
+		const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+		const year = date.getUTCFullYear();
+		return `${day}-${month}-${year}`;
 	}
 
-	function ymd(date) {
-		return new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString().slice(0, 10);
+	function inputDate(date) {
+		// Create UTC date and slice YYYY-MM-DD
+		return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+			.toISOString()
+			.slice(0, 10);
 	}
 
 	function clampDateToHorizon(d) {
@@ -84,7 +94,7 @@
 	// ---------- Init ----------
 	async function init() {
 		state.date = clampDateToHorizon(new Date());
-		byId("date-picker").value = ymd(state.date);
+		byId("date-picker").value = inputDate(state.date);
 		loadAllForDate();
 		renderSidebar();
 		renderGrid();
@@ -103,7 +113,7 @@
 
 			const input = document.createElement("input");
 			input.value = p.name || "";
-			input.placeholder = `Patient ${idx + 1}`;
+			input.placeholder = `Paciente ${idx + 1}`;
 			input.className = "border border-gray-300 rounded px-2 py-1 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500";
 			input.addEventListener("change", () => {
 				p.name = input.value.trim();
@@ -139,7 +149,7 @@
 
 			const tag = document.createElement("div");
 			tag.className = `px-2 w-full py-1 rounded cursor-pointer text-white ${s.color ? "bg-[" + s.color + "]" : "bg-blue-500"} font-medium`;
-			tag.textContent = s.name || "Unnamed";
+			tag.textContent = s.name || "Sin nombre";
 			tag.draggable = true;
 			tag.dataset.staffId = s.id;
 
@@ -169,8 +179,8 @@
 
 			// Remove this staff from all scheduled events
 			const delAllEvtBtn = document.createElement("button");
-			delAllEvtBtn.textContent = "❌ All Events";
-			delAllEvtBtn.title = "Remove staff from all scheduled events (today)";
+			delAllEvtBtn.textContent = "❌ Todos los eventos";
+			delAllEvtBtn.title = "Eliminar personal de todos los eventos programados (hoy)";
 			delAllEvtBtn.className = "px-2 py-1 text-sm text-gray-700 hover:text-gray-900 bg-gray-200 rounded w-2/4";
 			delAllEvtBtn.addEventListener("click", () => {
 				if (confirm(`Remove ${s.name} from all scheduled events for this date?`)) {
@@ -182,14 +192,12 @@
 
 			// Delete staff completely (remove from staff list + remove from events)
 			const deleteStaffBtn = document.createElement("button");
-			deleteStaffBtn.textContent = "❌ Delete";
-			deleteStaffBtn.title = "Delete staff entirely (also removes from events)";
+			deleteStaffBtn.textContent = "❌ Eliminar";
+			deleteStaffBtn.title = "Eliminar personal completamente (también se elimina de los eventos)";
 			deleteStaffBtn.className = "px-2 py-1 text-sm text-gray-700 hover:text-gray-900 bg-gray-200 rounded w-[49%]";
 			deleteStaffBtn.addEventListener("click", () => {
-				if (confirm(`Delete staff ${s.name} completely and remove from all events?`)) {
-					// Remove staff from scheduled events
+				if (confirm(`¿Eliminar completamente a ${s.name} y quitarlo de todos los eventos?`)) {
 					state.scheduled.forEach(ev => { ev.staff = ev.staff.filter(id => id !== s.id); });
-					// Remove staff from staff array
 					state.staff = state.staff.filter(st => st.id !== s.id);
 					saveAll();
 					renderSidebar();
@@ -214,7 +222,7 @@
 
 			const info = document.createElement("div");
 			info.className = "font-semibold text-gray-800";
-			info.textContent = evt.title || "Untitled";
+			info.textContent = evt.title || "Sin título";
 
 			const desc = document.createElement("div");
 			desc.className = "text-sm text-gray-500 mt-1";
@@ -353,7 +361,7 @@
 							saveAll();
 							refresh();
 						} else if (data.type === "event-scheduled") {
-							// allow dropping a scheduled event onto another patient column -> reassign patient & start time
+							// allow dropping a scheduled event onto another Paciente column -> reassign Paciente & start time
 							const sched = state.scheduled.find(s => s.id === data.id);
 							if (!sched) return;
 							const startMins = cfg.startHour * 60 + i * cfg.slotMinutes;

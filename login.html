@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="flex items-center justify-center h-screen bg-gray-100">
+    <form id="loginForm" class="bg-white p-6 rounded shadow-md w-80">
+        <h2 class="text-xl font-bold mb-4">Login</h2>
+        <input type="text" id="username" placeholder="Username" class="w-full mb-2 p-2 border rounded">
+        <input type="password" id="password" placeholder="Password" class="w-full mb-4 p-2 border rounded">
+        <button class="w-full bg-blue-600 text-white p-2 rounded">Login</button>
+    </form>
+
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
+
+            // simple check, replace with backend validation
+            if (user === "admin" && pass === "1234") {
+                localStorage.setItem("loggedIn", "true");
+                window.location.href = "/index.html"; // redirect to planner
+            } else {
+                alert("Invalid credentials");
+            }
+        });
+    </script>
+</body>
+
+</html>
